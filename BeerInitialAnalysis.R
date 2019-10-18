@@ -180,3 +180,41 @@ table(BeerClassify,BeerAndBreweryImprovedTrain$Classify)
 confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTrain$Classify))
 
 summary(BeerAndBreweryImproved)
+
+#Hyperparameter Tunning--------------------
+set.seed(1)
+iterations = 500
+numks = 60
+splitPerc = .7
+
+masterAcc = matrix(nrow = iterations, ncol = numks)
+
+for(j in 1:iterations)
+{
+  trainIndices = sample(1:dim(BeerAndBreweryImproved)[1],round(splitPerc * dim(BeerAndBreweryImproved)[1]))
+  train = BeerAndBreweryImproved[trainIndices,]
+  test = BeerAndBreweryImproved[-trainIndices,]
+  for(i in 1:numks)
+  {
+    classifications = knn(train[,14:15], test[,14:15], train$Classify, k = i)
+    table(classifications,test$Classify)
+    CM = confusionMatrix(table(classifications,test$Classify))
+    masterAcc[j,i] = CM$overall[1]
+  }
+  
+}
+
+MeanAcc = colMeans(masterAcc)
+
+plot(seq(1,numks,1),MeanAcc, type = "l")
+
+which.max(MeanAcc)
+max(MeanAcc)
+
+#New Model using hyperparamter tunning
+trainIndices = sample(1:dim(BeerAndBreweryImproved)[1],round(splitPerc * dim(BeerAndBreweryImproved)[1]))
+BeerAndBreweryImprovedTrain = BeerAndBreweryImproved[trainIndices,]
+BeerAndBreweryImprovedTest = BeerAndBreweryImproved[-trainIndices,]
+BeerClassify <- knn(BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain$Classify, k = 15, prob = TRUE)
+table(BeerClassify,BeerAndBreweryImprovedTrain$Classify)
+confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTrain$Classify))
