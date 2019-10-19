@@ -91,7 +91,7 @@ BeerAndBreweryImprovedByState <- BeerAndBreweryImproved %>%
 BeerAndBreweryImprovedByState$StateABVMeanPercent <- BeerAndBreweryImprovedByState$StateABVMean * 100.0
 BeerAndBreweryImprovedByState$StateABVMedianPercent <- BeerAndBreweryImprovedByState$StateABVMedian * 100.0
 
-#### AQ 4 chart  ####
+#### AQ 4 chart  #### use box plots######
 
 # more convienient to use this scale factor as now the same tick marks worl for both scales
 #scaleFactor <- max(BeerAndBreweryImprovedByState$StateABVMedianPercent) / max(BeerAndBreweryImprovedByState$StateIBUMedian)
@@ -215,6 +215,55 @@ max(MeanAcc)
 trainIndices = sample(1:dim(BeerAndBreweryImproved)[1],round(splitPerc * dim(BeerAndBreweryImproved)[1]))
 BeerAndBreweryImprovedTrain = BeerAndBreweryImproved[trainIndices,]
 BeerAndBreweryImprovedTest = BeerAndBreweryImproved[-trainIndices,]
-BeerClassify <- knn(BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain$Classify, k = 15, prob = TRUE)
+BeerClassify <- knn(BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain$Classify, k = 16, prob = TRUE)
 table(BeerClassify,BeerAndBreweryImprovedTrain$Classify)
 confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTrain$Classify))
+
+#Deep Dive----
+skimr::skim(BeerAndBreweryImproved)
+averageABV = BeerAndBreweryImproved %>% 
+  group_by(State) %>% 
+  summarize(ABV = mean(ABV), IBU = mean(IBU))
+
+#CODE FOR HEAT MAP HERE
+#Perform ANOVA by region for ABV and IBU here
+
+west = BeerAndBreweryImproved %>% 
+  filter(State %in% c('WA','OR','CA','NV','ID','MT','WY','CO','NM','AZ','UT')) %>%
+  mutate(region = 'W')
+
+midwest = BeerAndBreweryImproved %>% 
+  filter(State %in% c('ND','SD', 'NE', 'KS','MN','IA','MO','WI','IL','IN','MI','OH')) %>%
+  mutate(region = 'MW')
+
+southwest = BeerAndBreweryImproved %>% 
+  filter(State %in% c('AZ','NM','OK','TX')) %>%
+  mutate(region = 'SW')
+
+southeast = BeerAndBreweryImproved %>% 
+  filter(State %in% c('AK','LA','MA','AL','TN','KY','GA','WV','VA','NC','SC','FL')) %>%
+  mutate(region = 'SE')
+
+northeast = BeerAndBreweryImproved %>% 
+  filter(State %in% c('ME','NH','VT','MA','CT','RI','NJ','NY','PA')) %>%
+  mutate(region = 'NE')
+
+pacific = BeerAndBreweryImproved %>% 
+  filter(State %in% c('AL','HI')) %>%
+  mutate(region = 'PA')
+USregions = rbind(west,midwest,southwest,southeast,northeast,pacific)
+USregions$region = as.factor(USregions$region)
+
+library("ggpubr")
+ggboxplot(USregions, x = "region", y = "IBU", 
+          ylab = "IBU", xlab = "region")
+abvModel = aov(IBU~region, data = USregions)
+summary(abvModel)
+TukeyHSD(abvModel)
+
+model1 = lm(ABV ~ region + IBU + region*IBU, data = USregions)
+summary(model1)
+
+model2 = manova(cbind(IBU, ABV) ~ region, data = USregions)
+summary(model2, test = "Wilks")
+summary.aov(model2)
