@@ -110,7 +110,7 @@ ggplot(data = BeerAndBreweryImprovedByState, aes(x=State,  width=.4)) +
     axis.text.x.bottom=element_text(color="blue")
   ) +
   coord_flip() +
-  labs(title = "Median ABV percent and IBU rating by state", x = element_blank()) +
+  labs(x = element_blank()) +
   scale_x_discrete(limits = rev(levels(BeerAndBreweryImprovedByState$State)))
 
 #### AQ 5
@@ -141,8 +141,9 @@ BeerAndBreweryImprovedByState %>% arrange(StateIBUMedian) %>% head(10)
 #### AQ 7 ####
 ggplot(data = BeerAndBreweryImproved, mapping = aes(x = ABV * 100, y = IBU)) +
   geom_point(position = "dodge") + geom_smooth(se = FALSE) +
-  xlim(2.5, 10) + xlab("Percent ABV") + ylab("IBU Rating") + 
-  labs(title = "IBU versus ABV percent", caption = "ABV values of over 10 percent were left off due to sparseness of the data")
+  xlab("Percent ABV") + ylab("IBU Rating") + 
+  scale_x_continuous(breaks = c(2,3,4,5,6,7,8,9,10), limits = c(2.5,10)) +
+  labs(caption = "ABV values of over 10 percent were left off due to sparseness of the data")
 
 #### AQ 8 ####
 IsAleBool <- str_detect(BeerAndBreweryImproved$Name.y, regex("\\bAle\\b", ignore_case = TRUE)) & #Ale is a word
