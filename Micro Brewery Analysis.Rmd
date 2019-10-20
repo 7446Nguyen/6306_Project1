@@ -43,7 +43,7 @@ Beers[Beers$Brewery_id == 164,]$Brewery_id <- 372
 Breweries <- Breweries[!(Breweries$Brew_ID == 139 | Breweries$Brew_ID == 164),]
 ```
 ### Unique Beers
-Several beers were duplicated in the provided data. A unique set of beers was created. For the purposes of this analysis Beer name and brewery id are assumed to be unique
+Several beers were duplicated in the provided data. A unique set of beers was created. For the purposes of this analysis beer name and brewery id are assumed to be unique
 ```{r DuplicateBeers, message=FALSE}
 UniqueBeers <- Beers %>% group_by(Name,Brewery_id) %>% summarize(minBeer_ID = min(Beer_ID)) %>% select(minBeer_ID)
 
@@ -82,7 +82,7 @@ BreweriesByCityDesc <- BreweriesByCity %>% arrange(desc(n))
 BeerAndBrewery <- Breweries %>% inner_join(Beers, by = c("Brew_ID" = "Brewery_id"))
 ```
 ## Question 3 : Addressing missing data values
-ABV content and IBU rating data is missing for many beers. Mean ABV and IBU data for beers computed by style will be substituted for the missing data
+62 beers are missing ABV content and 990 beers are missing IBU rating. Mean ABV and IBU data for beers computed by style will be substituted for the missing data
 
 ### Compute Mean ABV by Style
 ```{r Question3ABVStyle}
@@ -107,6 +107,8 @@ BeerAndBreweryImproved <- BeerAndBrewery %>%
   mutate(ABV = coalesce(ABV, ABVStyle)) %>%
   mutate(IBU = coalesce(IBU, IBUStyle))
 ```
+After missing data was filled in 0 beers have missing ABU content and 51 beers are missing an IBU rating.
+
 ## Question 4 : Plot medain alcohol content and IBU rating by state
 
 ### Summarize and enhance data for plot
@@ -144,12 +146,12 @@ ggplot(data = BeerAndBreweryImprovedByState, aes(x=State,  width=.4)) +
 ## Question 5 : States with the highest ABV and IBU
 Unsure of exactly what is being asked. Do we need the state with the highest median ABV and IBU respectively or the states with the beer that has the highest ABV and IBU. The question was worked both ways
 
-### Highest median ABV
+### State with the highest median ABV percent
 ```{r Question5MaxMedianABV}
 BeerAndBreweryImprovedByState[which.max(BeerAndBreweryImprovedByState$StateABVMedian),] %>% select(State, StateABVMedianPercent)
 ```
 
-### Highest median IBU
+### State with the highest median IBU rating
 ```{r Question5MaxMedianIBU}
 BeerAndBreweryImprovedByState[which.max(BeerAndBreweryImprovedByState$StateIBUMedian),] %>% select(State, StateIBUMedian)
 ```
@@ -168,7 +170,7 @@ BeerAndBreweryImproved[which.max(BeerAndBreweryImproved$IBU),] %>% select(State,
 Most states have a median ABV for beers brewed of between five and six percent. Two states fall bellow that range UT and NJ, however NJ has only eight different flavors of beer being brewed in that state. Five states have a median ABV for beers brewed above six percent KY, DC, WV, NM, MI, however, DC and WV have less than ten different flavors of beer brewed in them.
 
 ## Question 7 : Discuss the relationship between IBU and ABV
-The graph below shows the relationship between IBU and ABV, in general as IBU rating increase so does ABV. The only part of the graph that shows a flat line is with very weak beers, those having an alcohol content less than 5 percent. There is a sort of plateau with beers of 7 percent ABV not changing in bitterness. Higher alcohol content beers, those over 8 percent, change bitterness at a slower rate than that of beers from 5 to 6.5 percent ABV.
+The graph below shows the relationship between IBU and ABV, in general as IBU rating increase so does ABV percent. The only part of the graph that shows a flat line is with very weak beers, those having an alcohol content less than 5 percent. A plateau exists with beers near 7 percent ABV not changing in bitterness. Higher alcohol content beers, those over 8 percent, change bitterness but at a slower rate than that of beers from 5 to 6.5 percent ABV.
 ```{r Question7, fig.height = 6, fig.width=10, message=FALSE,warning=FALSE}
 ggplot(data = BeerAndBreweryImproved, mapping = aes(x = ABV * 100, y = IBU)) +
   geom_point(position = "dodge") + geom_smooth(se = FALSE) +
