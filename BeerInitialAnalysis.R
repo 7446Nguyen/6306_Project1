@@ -101,8 +101,7 @@ scaleFactor = 0.1
 ggplot(data = BeerAndBreweryImprovedByState, aes(x=State,  width=.4)) +
   geom_col(aes(y=StateABVMedianPercent), fill="blue") +
   geom_col(aes(y=StateIBUMedian * scaleFactor), fill="red", position = position_nudge(x = -.4)) +
-  scale_y_continuous(name="Median percent ABV by State", breaks = c(0,1,2,3,4,5,6),
-                     sec.axis=sec_axis(~./scaleFactor, name="Median IBU by State", breaks = c(0,10,20,30,40,50,60))) +
+  scale_y_continuous(name="Medain percent ABV by State", sec.axis=sec_axis(~./scaleFactor, name="Median IBU by State")) +
   theme(
     axis.title.x.top=element_text(color="red"),
     axis.text.x.top=element_text(color="red"),
@@ -110,7 +109,7 @@ ggplot(data = BeerAndBreweryImprovedByState, aes(x=State,  width=.4)) +
     axis.text.x.bottom=element_text(color="blue")
   ) +
   coord_flip() +
-  labs(x = element_blank()) +
+  labs(title = "Food Security in Venezuela, Cereals Production and Food Gap", x = element_blank()) +
   scale_x_discrete(limits = rev(levels(BeerAndBreweryImprovedByState$State)))
 
 #### AQ 5
@@ -129,10 +128,6 @@ BeerAndBreweryImproved[which.max(BeerAndBreweryImproved$IBU),] %>% select(State,
 BeerAndBreweryImprovedByState %>% arrange(desc(StateABVMedian)) %>% head(10)
 BeerAndBreweryImprovedByState %>% arrange(StateABVMedian) %>% head(10)
 
-# Get states with most and least median IBU beer offerings
-BeerAndBreweryImprovedByState %>% arrange(desc(StateIBUMedian)) %>% head(10)
-BeerAndBreweryImprovedByState %>% arrange(StateIBUMedian) %>% head(10)
-
 # most states have a median ABV for beers brewed of between five and six percent. Two states fall bellow that range UT and NJ, 
 # however NJ has only eight different flavors of beer being brewed in that state.
 # Five states have a median ABV for beers brewed above six percent KY, DC, WV, NM, MI, however, DC and WV have less than 
@@ -141,9 +136,7 @@ BeerAndBreweryImprovedByState %>% arrange(StateIBUMedian) %>% head(10)
 #### AQ 7 ####
 ggplot(data = BeerAndBreweryImproved, mapping = aes(x = ABV * 100, y = IBU)) +
   geom_point(position = "dodge") + geom_smooth(se = FALSE) +
-  xlab("Percent ABV") + ylab("IBU Rating") + 
-  scale_x_continuous(breaks = c(2,3,4,5,6,7,8,9,10), limits = c(2.5,10)) +
-  labs(caption = "ABV values of over 10 percent were left off due to sparseness of the data")
+  xlim(2.5, 10) + xlab("Percent ABV") + ylab("IBU Rating")
 
 #### AQ 8 ####
 IsAleBool <- str_detect(BeerAndBreweryImproved$Name.y, regex("\\bAle\\b", ignore_case = TRUE)) & #Ale is a word
@@ -213,7 +206,7 @@ for(j in 1:iterations)
 
 MeanAcc = colMeans(masterAcc)
 
-plot(seq(1,numks,1),MeanAcc, type = "l")
+plot(seq(1,numks,1),MeanAcc, type = "l", main = "Hyperparameter Tunning", xlab = "Number of k's", ylab = "Mean Accuracy")
 
 which.max(MeanAcc)
 max(MeanAcc)
@@ -225,6 +218,10 @@ BeerAndBreweryImprovedTest = BeerAndBreweryImproved[-trainIndices,]
 BeerClassify <- knn(BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain$Classify, k = 16, prob = TRUE)
 table(BeerClassify,BeerAndBreweryImprovedTrain$Classify)
 confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTrain$Classify))
+
+
+
+
 
 #Deep Dive----
 skimr::skim(BeerAndBreweryImproved)
@@ -261,16 +258,60 @@ pacific = BeerAndBreweryImproved %>%
 USregions = rbind(west,midwest,southwest,southeast,northeast,pacific)
 USregions$region = as.factor(USregions$region)
 
+#ANOVA for IBU and ABV with Tukey HSD Post Hoc------------------------
 library("ggpubr")
 ggboxplot(USregions, x = "region", y = "IBU", 
           ylab = "IBU", xlab = "region")
-abvModel = aov(IBU~region, data = USregions)
+abvModel = aov(ABV~region, data = USregions)+
+  
 summary(abvModel)
 TukeyHSD(abvModel)
+summary(glht(abvModel, linfct = mcp(group = "Tukey")))
 
-model1 = lm(ABV ~ region + IBU + region*IBU, data = USregions)
-summary(model1)
+IBUModel = aov(IBU~region, data = USregions)
+summary(IBUModel)
+TukeyHSD(IBUModel)
 
+#MANOVA and Linear Combos - May not be the best option-----------------------------------------------------------
 model2 = manova(cbind(IBU, ABV) ~ region, data = USregions)
+
+model2 = manova(region ~ cbind(IBU, ABV) ~ region, data = USregions)
 summary(model2, test = "Wilks")
-summary.aov(model2)
+
+levels(USregions$region)
+#"MW" "NE" "PA" "SE" "SW" "W" (6C2)
+c1 = c(1,-1,0,0,0,0)
+c2 = c(1,0,-1,0,0,0)
+c3 = c(1,0,0,-1,0,0)
+c4 = c(1,0,0,0,-1,0)
+c5 = c(1,0,0,0,0,-1)
+
+c6 = c(0,1,-1,0,0,0)
+c7 = c(0,1,0,-1,0,0)
+c8 = c(0,1,0,0,-1,0)
+c9 = c(0,1,0,0,0,-1)
+
+c10 = c(0,0,1,-1,0,0)
+c11 = c(0,0,1,0,-1,0)
+c12 = c(0,0,1,0,0,-1)
+
+c13 = c(0,0,0,1,-1,0)
+c14 = c(0,0,0,1,0,-1)
+c15 = c(0,0,0,0,1,-1)
+
+mat = cbind(c1,c2,c3,c4,c5)
+mat2 = cbind(c6,c7,c8,c9)
+mat3 = cbind(c10,c11,c12)
+mat4 = cbind(c13,c14)
+
+contrasts(USregions$region) = mat
+summary.aov(IBUModel, split = list(region=list("MW v. NE"=1, "MW v. PA" = 2, "MW v. SE" = 3, "MW v. SW" = 4,"MW v. W"=5)))
+
+contrasts(USregions$region) = mat2
+summary.aov(model2, split = list(region=list("NE v.PA"=1, "NE v. SE"=2,"NE v. SW"=4, "NE v. W"=4)))
+
+contrasts(USregions$region) = mat3
+summary.aov(model2, split = list(region=list("PA v. SE"=1,"PA v. SW"=2,"PA v. W"=3)))
+
+contrasts(USregions$region) = mat4
+summary.aov(model2, split = list(region=list("SE v. SW"=1, "SE v. W"=2)))
