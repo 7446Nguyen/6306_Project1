@@ -182,6 +182,9 @@ confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTrain$Classify))
 summary(BeerAndBreweryImproved)
 
 #Hyperparameter Tunning--------------------
+BeerAndBreweryImproved2 = BeerAndBreweryImproved%>%
+  filter(Classify != 'Other')
+
 set.seed(1)
 iterations = 500
 numks = 60
@@ -191,9 +194,9 @@ masterAcc = matrix(nrow = iterations, ncol = numks)
 
 for(j in 1:iterations)
 {
-  trainIndices = sample(1:dim(BeerAndBreweryImproved)[1],round(splitPerc * dim(BeerAndBreweryImproved)[1]))
-  train = BeerAndBreweryImproved[trainIndices,]
-  test = BeerAndBreweryImproved[-trainIndices,]
+  trainIndices = sample(1:dim(BeerAndBreweryImproved2)[1],round(splitPerc * dim(BeerAndBreweryImproved2)[1]))
+  train = BeerAndBreweryImproved2[trainIndices,]
+  test = BeerAndBreweryImproved2[-trainIndices,]
   for(i in 1:numks)
   {
     classifications = knn(train[,14:15], test[,14:15], train$Classify, k = i)
@@ -206,18 +209,18 @@ for(j in 1:iterations)
 
 MeanAcc = colMeans(masterAcc)
 
-plot(seq(1,numks,1),MeanAcc, type = "l", main = "Hyperparameter Tunning", xlab = "Number of k's", ylab = "Mean Accuracy")
+plot(seq(1,numks,1),MeanAcc, type = "l", main = "Hyperparameter Optimization", xlab = "Number of k's", ylab = "Mean Accuracy")
 
 which.max(MeanAcc)
 max(MeanAcc)
 
 #New Model using hyperparamter tunning
-trainIndices = sample(1:dim(BeerAndBreweryImproved)[1],round(splitPerc * dim(BeerAndBreweryImproved)[1]))
-BeerAndBreweryImprovedTrain = BeerAndBreweryImproved[trainIndices,]
-BeerAndBreweryImprovedTest = BeerAndBreweryImproved[-trainIndices,]
-BeerClassify <- knn(BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain$Classify, k = 16, prob = TRUE)
-table(BeerClassify,BeerAndBreweryImprovedTrain$Classify)
-confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTrain$Classify))
+trainIndices = sample(1:dim(BeerAndBreweryImproved2)[1],round(splitPerc * dim(BeerAndBreweryImproved2)[1]))
+BeerAndBreweryImprovedTrain2 = BeerAndBreweryImproved2[trainIndices,]
+BeerAndBreweryImprovedTest2 = BeerAndBreweryImproved2[-trainIndices,]
+BeerClassify <- knn(BeerAndBreweryImprovedTrain2[,14:15], BeerAndBreweryImprovedTest2[,14:15], BeerAndBreweryImprovedTrain2$Classify, k = 11, prob = TRUE)
+table(BeerClassify,BeerAndBreweryImprovedTest2$Classify)
+confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTest2$Classify))
 
 
 
@@ -262,11 +265,11 @@ USregions$region = as.factor(USregions$region)
 library("ggpubr")
 ggboxplot(USregions, x = "region", y = "IBU", 
           ylab = "IBU", xlab = "region")
-abvModel = aov(ABV~region, data = USregions)+
-  
+abvModel = aov(ABV~region, data = USregions)
+summary(lm(ABV~region, data = USregions))  
 summary(abvModel)
 TukeyHSD(abvModel)
-summary(glht(abvModel, linfct = mcp(group = "Tukey")))
+
 
 IBUModel = aov(IBU~region, data = USregions)
 summary(IBUModel)
