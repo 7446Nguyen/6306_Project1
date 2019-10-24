@@ -167,7 +167,7 @@ BeerAndBreweryImproved[which.max(BeerAndBreweryImproved$IBU),] %>% select(State,
 ```
 
 ## Question 6 : Summary and comments on distribution of ABV and IBU variables
-Most states have a median ABV for beers brewed of between five and six percent. Two states fall bellow that range UT and NJ, however NJ has only eight different flavors of beer being brewed in that state. Five states have a median ABV for beers brewed above six percent KY, DC, WV, NM, MI, however, DC and WV have less than ten different flavors of beer brewed in them.
+Most states have a median ABV for beers brewed of between five and six percent. Two states fall bellow that range UT and NJ, however NJ has only eight different flavors of beer being brewed in that state. Five states have a median ABV for beers brewed above six percent KY, DC, WV, NM, MI; however, DC and WV have less than ten different flavors of beer brewed in them.
 
 ## Question 7 : Discuss the relationship between IBU and ABV
 The graph below shows the relationship between IBU and ABV, in general as IBU rating increase so does ABV percent. The only part of the graph that shows a flat line is with very weak beers, those having an alcohol content less than 5 percent. A plateau exists with beers near 7 percent ABV not changing in bitterness. Higher alcohol content beers, those over 8 percent, change bitterness but at a slower rate than that of beers from 5 to 6.5 percent ABV.
