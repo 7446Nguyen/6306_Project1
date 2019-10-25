@@ -21,12 +21,14 @@ The data for this project was provided by officials from Budweiser brewing compa
 
 ## Import data
 Two data files Beers and Breweries are used in this analysis
+
 ```{r ImportData}
 
 # Get raw data
-Beers <- read.csv("Beers.csv")
-Breweries <- read.csv("Breweries.csv")
+Beers <- read.csv("C:\\Data\\GitRepos\\6306_Project1\\Beers.csv")
+Breweries <- read.csv("C:\\Data\\GitRepos\\6306_Project1\\Breweries.csv")
 ```
+
 ## Clean Data
 Data was examined for missing and duplicate values Cleaning data took the place in several steps
 
@@ -351,7 +353,7 @@ sort(ibupvals)
 ### IBU rating versus ABV percentage by style
 Here we see beers IBU rating versus ABV percent for each style. Style was determined by examing beer names and styles for key words.
 
-```{r StyleBxPlt, fig.height = 8, fig.width=10, message=FALSE, warning=FALSE}
+```{r Styleplot, fig.height = 8, fig.width=10, message=FALSE, warning=FALSE}
 styles = c("Lager","Pilsner","Stout","Porter","Weissbier","Bock","Bitter","Hefeweizen","Oktoberfest","Tripel","Witbier")
 
 for(i in 1:length(styles)){
