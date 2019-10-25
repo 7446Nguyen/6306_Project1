@@ -176,7 +176,7 @@ BeerAndBreweryImproved$zIBU = scale(BeerAndBreweryImproved$IBU)
 trainIndices = sample(1:dim(BeerAndBreweryImproved)[1],round(splitPerc * dim(BeerAndBreweryImproved)[1]))
 BeerAndBreweryImprovedTrain = BeerAndBreweryImproved[trainIndices,]
 BeerAndBreweryImprovedTest = BeerAndBreweryImproved[-trainIndices,]
-BeerClassify <- knn(BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain[,14:15], BeerAndBreweryImprovedTrain$Classify, k = 49, prob = TRUE)
+BeerClassify <- knn(BeerAndBreweryImprovedTrain[,c('zABV','zIBU')], BeerAndBreweryImprovedTrain[,c('zABV','zIBU')], BeerAndBreweryImprovedTrain$Classify, k = 49, prob = TRUE)
 table(BeerClassify,BeerAndBreweryImprovedTrain$Classify)
 confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTrain$Classify))
 
@@ -200,7 +200,7 @@ for(j in 1:iterations)
   test = BeerAndBreweryImproved2[-trainIndices,]
   for(i in 1:numks)
   {
-    classifications = knn(train[,14:15], test[,14:15], train$Classify, k = i)
+    classifications = knn(train[,c('zABV','zIBU')], test[,c('zABV','zIBU')], train$Classify, k = i)
     table(classifications,test$Classify)
     CM = confusionMatrix(table(classifications,test$Classify))
     masterAcc[j,i] = CM$overall[1]
@@ -219,7 +219,11 @@ max(MeanAcc)
 trainIndices = sample(1:dim(BeerAndBreweryImproved2)[1],round(splitPerc * dim(BeerAndBreweryImproved2)[1]))
 BeerAndBreweryImprovedTrain2 = BeerAndBreweryImproved2[trainIndices,]
 BeerAndBreweryImprovedTest2 = BeerAndBreweryImproved2[-trainIndices,]
+<<<<<<< HEAD
 BeerClassify <- knn(BeerAndBreweryImprovedTrain2[,c('zABV','zIBU')], BeerAndBreweryImprovedTest2[,c('zABV','zIBU')], BeerAndBreweryImprovedTrain2$Classify, k = 11, prob = TRUE)
+=======
+BeerClassify <- knn(BeerAndBreweryImprovedTrain2[,c('zABV','zIBU')], BeerAndBreweryImprovedTest2[,c('zABV','zIBU')], BeerAndBreweryImprovedTrain2$Classify, k = 26, prob = TRUE)
+>>>>>>> f4c8331fc84d723d0e436019ca18bca1d2ac18bf
 table(BeerClassify,BeerAndBreweryImprovedTest2$Classify)
 confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTest2$Classify))
 
@@ -325,6 +329,7 @@ summary.aov(model2, split = list(region=list("PA v. SE"=1,"PA v. SW"=2,"PA v. W"
 contrasts(USregions$region) = mat4
 summary.aov(model2, split = list(region=list("SE v. SW"=1, "SE v. W"=2)))
 
+<<<<<<< HEAD
 # Start my analysis of 9
 # work with more styles "Lager","Pilsner","Stout","Porter","Weissbier","Bock","Cider","Bitter","Hefeweizen","Oktoberfest","Quad","Tripel","Witbier"
 
@@ -345,4 +350,6 @@ ggplot(mapping = aes(x = ABV * 100, y = IBU))  + theme(legend.position = "none")
   ggtitle("IBU rating versus ABV percent by style") +
   xlim(2.5, 10) + xlab("Percent ABV") + ylab("IBU Rating")
 
+=======
+>>>>>>> f4c8331fc84d723d0e436019ca18bca1d2ac18bf
 
