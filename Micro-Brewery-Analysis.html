@@ -386,8 +386,8 @@ summary {
 <h2>Import data</h2>
 <p>Two data files Beers and Breweries are used in this analysis</p>
 <pre class="r"><code># Get raw data
-Beers &lt;- read.csv(&quot;Beers.csv&quot;)
-Breweries &lt;- read.csv(&quot;Breweries.csv&quot;)</code></pre>
+Beers &lt;- read.csv(&quot;C:\\Data\\GitRepos\\6306_Project1\\Beers.csv&quot;)
+Breweries &lt;- read.csv(&quot;C:\\Data\\GitRepos\\6306_Project1\\Breweries.csv&quot;)</code></pre>
 </div>
 <div id="clean-data" class="section level2">
 <h2>Clean Data</h2>
@@ -999,8 +999,8 @@ BeerClassify &lt;- knn(BeerAndBreweryImprovedTrain2[,c(&#39;zABV&#39;,&#39;zIBU&
 cm &lt;- confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTest2$Classify))
 print(as.matrix(cm))</code></pre>
 <pre><code>##     Ale IPA
-## Ale 259  29
-## IPA  31 144</code></pre>
+## Ale 293  30
+## IPA  20 120</code></pre>
 </div>
 </div>
 <div id="question-9-create-our-own-answers" class="section level2">
