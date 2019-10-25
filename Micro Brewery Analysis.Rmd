@@ -13,6 +13,7 @@ library(dplyr)
 library(class)
 library(caret)
 library(kableExtra)
+library(ggpubr)
 ```
 
 # Import and clean data
@@ -23,8 +24,8 @@ Two data files Beers and Breweries are used in this analysis
 ```{r ImportData}
 
 # Get raw data
-Beers <- read.csv("//DS1513/AllData/Adam/SMU Data Science Courses/DS 6306 Doing Data Science/Unit 8 and 9_ Case Study 1/Beers.csv")
-Breweries <- read.csv("//DS1513/AllData/Adam/SMU Data Science Courses/DS 6306 Doing Data Science/Unit 8 and 9_ Case Study 1/Breweries.csv")
+Beers <- read.csv("Beers.csv")
+Breweries <- read.csv("Breweries.csv")
 ```
 ## Clean Data
 Data was examined for missing and duplicate values Cleaning data took the place in several steps
@@ -260,7 +261,7 @@ max(MeanAcc)
 
 ```
 
-### Run kNN model with "k" = 26
+### Run kNN model with "k" = 11
 Ouput tables and confusion matrix
 
 ```{r kNNModel}
@@ -268,8 +269,109 @@ trainIndices = sample(1:dim(BeerAndBreweryImproved2)[1],round(splitPerc * dim(Be
 BeerAndBreweryImprovedTrain2 = BeerAndBreweryImproved2[trainIndices,]
 BeerAndBreweryImprovedTest2 = BeerAndBreweryImproved2[-trainIndices,]
 BeerClassify <- knn(BeerAndBreweryImprovedTrain2[,c('zABV','zIBU')], BeerAndBreweryImprovedTest2[,c('zABV','zIBU')], BeerAndBreweryImprovedTrain2$Classify, k = 11, prob = TRUE)
-table(BeerClassify,BeerAndBreweryImprovedTest2$Classify)
+#table(BeerClassify,BeerAndBreweryImprovedTest2$Classify)
 cm <- confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTest2$Classify))
 print(as.matrix(cm))
 ```
+
+## Question 9 Create our own answers
+
+### Analysis by region examining ABV and IBU using ANOVA
+Six regions were created by grouping the states into them. An ANOVA(ANalysis Of VAriance) was performed by region. This test looks for statistically significant differences in IBU and ABV by region.
+
+### Create the regions
+
+```{r ANOVAregion, message=FALSE, warning=FALSE}
+averageABV = BeerAndBreweryImproved %>% 
+  group_by(State) %>% 
+  summarize(ABV = mean(ABV), IBU = mean(IBU))
+
+west = BeerAndBreweryImproved %>% 
+  filter(str_trim(State, side = c("both")) %in% c('WA','OR','CA','NV','ID','MT','WY','CO','NM','AZ','UT')) %>%
+  mutate(region = 'W')
+
+midwest = BeerAndBreweryImproved %>% 
+  filter(str_trim(State, side = c("both")) %in% c('ND','SD', 'NE', 'KS','MN','IA','MO','WI','IL','IN','MI','OH')) %>%
+  mutate(region = 'MW')
+
+southwest = BeerAndBreweryImproved %>% 
+  filter(str_trim(State, side = c("both")) %in% c('AZ','NM','OK','TX')) %>%
+  mutate(region = 'SW')
+
+southeast = BeerAndBreweryImproved %>% 
+  filter(str_trim(State, side = c("both")) %in% c('AK','LA','MA','AL','TN','KY','GA','WV','VA','NC','SC','FL')) %>%
+  mutate(region = 'SE')
+
+northeast = BeerAndBreweryImproved %>% 
+  filter(str_trim(State, side = c("both")) %in% c('ME','NH','VT','MA','CT','RI','NJ','NY','PA')) %>%
+  mutate(region = 'NE')
+
+pacific = BeerAndBreweryImproved %>% 
+  filter(str_trim(State, side = c("both")) %in% c('AL','HI')) %>%
+  mutate(region = 'PA')
+USregions = rbind(west,midwest,southwest,southeast,northeast,pacific)
+USregions$region = as.factor(USregions$region)
 ```
+
+### ANOVA of ABV percent
+While the mean alcohol content does vary by region the results of comparing region by region fall short of a statisticall significant.
+
+```{r ABVANOVABxplt, fig.height = 6, fig.width=10}
+ggboxplot(USregions, x = "region", y = "ABV", 
+          ylab = "ABV", xlab = "region") + ggtitle("ABV percent by region")
+abvModel = aov(ABV~region, data = USregions)
+abvTukey = TukeyHSD(abvModel)
+abvpvals <- abvTukey$region[,4]
+```
+
+Four relation ships come near to 95% siginifigance NE-MW, W-NE, SE-MW, W-SE
+
+```{r ABVANOVA}
+sort(abvpvals)
+```
+
+### ANOVA of IBU rating
+While the mean alcohol content does vary by region the results of comparing region by region fall short of a statisticall significant.
+
+```{r IBUBxplt}
+ggboxplot(USregions, x = "region", y = "IBU", 
+          ylab = "IBU", xlab = "region") + ggtitle("IBU rating by region")
+IBUModel = aov(IBU~region, data = USregions)
+ibuTukey <- TukeyHSD(IBUModel)
+ibupvals <- ibuTukey$region[,4]
+
+```
+### IBU rating does have a statistically significant difference between regions
+The difference in IBU rating between the "W" and "MW" regions is statistically significantly p-Value = 0.0127
+
+```{r IBUANOVA}
+sort(ibupvals)
+
+```
+### IBU rating versus ABV percentage by style
+Here we see beers IBU rating versus ABV percent for each style. Style was determined by examing beer names and styles for key words.
+
+```{r StyleBxPlt, fig.height = 8, fig.width=10, message=FALSE, warning=FALSE}
+styles = c("Lager","Pilsner","Stout","Porter","Weissbier","Bock","Bitter","Hefeweizen","Oktoberfest","Tripel","Witbier")
+
+for(i in 1:length(styles)){
+  style = str_trim(styles[i], side = c("both"))
+  styleRegex = paste("\\b", style, "\\b", sep="")
+  # Name
+  IsStyleBoolName <- str_detect(BeerAndBreweryImproved$Name.y, regex(styleRegex, ignore_case = TRUE))
+  #BeerAndBreweryImproved[IsStyleBool,]$Classify <- style
+  # Style
+  IsStyleBoolStyle <- str_detect(BeerAndBreweryImproved$Style, regex(styleRegex, ignore_case = TRUE))
+  BeerAndBreweryImproved[IsStyleBoolName|IsStyleBoolStyle,]$Classify <- style
+}
+
+#scatter plot
+BeerAndBreweryImproved %>% filter(Classify != "Other" & Classify != "Ale" & Classify != "IPA") %>% 
+ggplot(mapping = aes(x = ABV * 100, y = IBU)) +
+  geom_point(position = "dodge", mapping = aes(color = Classify)) + facet_wrap(vars(Classify), ncol = 3) +
+  ggtitle("IBU rating versus ABV percent by style") +
+  xlim(2.5, 10) + xlab("Percent ABV") + ylab("IBU Rating")
+```
+
+The plots above are for styles that had a significant population of beers and had not been previously examined
+

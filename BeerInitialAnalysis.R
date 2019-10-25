@@ -160,7 +160,8 @@ BeerAndBreweryImproved[IsIPABool,]$Classify <- "IPA"
 # may need to explore using Style as well as Name NOT APPLICABLE
 #scatter plot
 ggplot(data = BeerAndBreweryImproved, mapping = aes(x = ABV * 100, y = IBU)) +
-  geom_point(position = "dodge", mapping = aes(color = Classify)) + geom_smooth(se = FALSE, mapping = aes(color = Classify)) +
+  geom_point(position = "dodge", mapping = aes(color = Classify)) + 
+  geom_smooth(se = FALSE, mapping = aes(color = Classify)) +
   xlim(2.5, 10) + xlab("Percent ABV") + ylab("IBU Rating")
 
 splitPerc = .7
@@ -218,7 +219,7 @@ max(MeanAcc)
 trainIndices = sample(1:dim(BeerAndBreweryImproved2)[1],round(splitPerc * dim(BeerAndBreweryImproved2)[1]))
 BeerAndBreweryImprovedTrain2 = BeerAndBreweryImproved2[trainIndices,]
 BeerAndBreweryImprovedTest2 = BeerAndBreweryImproved2[-trainIndices,]
-BeerClassify <- knn(BeerAndBreweryImprovedTrain2[,14:15], BeerAndBreweryImprovedTest2[,14:15], BeerAndBreweryImprovedTrain2$Classify, k = 11, prob = TRUE)
+BeerClassify <- knn(BeerAndBreweryImprovedTrain2[,c('zABV','zIBU')], BeerAndBreweryImprovedTest2[,c('zABV','zIBU')], BeerAndBreweryImprovedTrain2$Classify, k = 11, prob = TRUE)
 table(BeerClassify,BeerAndBreweryImprovedTest2$Classify)
 confusionMatrix(table(BeerClassify,BeerAndBreweryImprovedTest2$Classify))
 
@@ -236,41 +237,46 @@ averageABV = BeerAndBreweryImproved %>%
 #Perform ANOVA by region for ABV and IBU here
 
 west = BeerAndBreweryImproved %>% 
-  filter(State %in% c('WA','OR','CA','NV','ID','MT','WY','CO','NM','AZ','UT')) %>%
+  filter(str_trim(State, side = c("both")) %in% c('WA','OR','CA','NV','ID','MT','WY','CO','NM','AZ','UT')) %>%
   mutate(region = 'W')
 
 midwest = BeerAndBreweryImproved %>% 
-  filter(State %in% c('ND','SD', 'NE', 'KS','MN','IA','MO','WI','IL','IN','MI','OH')) %>%
+  filter(str_trim(State, side = c("both")) %in% c('ND','SD', 'NE', 'KS','MN','IA','MO','WI','IL','IN','MI','OH')) %>%
   mutate(region = 'MW')
 
 southwest = BeerAndBreweryImproved %>% 
-  filter(State %in% c('AZ','NM','OK','TX')) %>%
+  filter(str_trim(State, side = c("both")) %in% c('AZ','NM','OK','TX')) %>%
   mutate(region = 'SW')
 
 southeast = BeerAndBreweryImproved %>% 
-  filter(State %in% c('AK','LA','MA','AL','TN','KY','GA','WV','VA','NC','SC','FL')) %>%
+  filter(str_trim(State, side = c("both")) %in% c('AK','LA','MA','AL','TN','KY','GA','WV','VA','NC','SC','FL')) %>%
   mutate(region = 'SE')
 
 northeast = BeerAndBreweryImproved %>% 
-  filter(State %in% c('ME','NH','VT','MA','CT','RI','NJ','NY','PA')) %>%
+  filter(str_trim(State, side = c("both")) %in% c('ME','NH','VT','MA','CT','RI','NJ','NY','PA')) %>%
   mutate(region = 'NE')
 
 pacific = BeerAndBreweryImproved %>% 
-  filter(State %in% c('AL','HI')) %>%
+  filter(str_trim(State, side = c("both")) %in% c('AL','HI')) %>%
   mutate(region = 'PA')
 USregions = rbind(west,midwest,southwest,southeast,northeast,pacific)
 USregions$region = as.factor(USregions$region)
 
 #ANOVA for IBU and ABV with Tukey HSD Post Hoc------------------------
-library("ggpubr")
-ggboxplot(USregions, x = "region", y = "IBU", 
-          ylab = "IBU", xlab = "region")
+library(ggpubr)
+ggboxplot(USregions, x = "region", y = "ABV", 
+          ylab = "ABV", xlab = "region")
 abvModel = aov(ABV~region, data = USregions)
 summary(lm(ABV~region, data = USregions))  
 summary(abvModel)
-TukeyHSD(abvModel)
+abvTukey = TukeyHSD(abvModel)
+
+abvpvals <- abvTukey$region[,4]
+sort(abvpvals)
 
 
+ggboxplot(USregions, x = "region", y = "IBU", 
+          ylab = "IBU", xlab = "region")
 IBUModel = aov(IBU~region, data = USregions)
 summary(IBUModel)
 TukeyHSD(IBUModel)
@@ -318,3 +324,25 @@ summary.aov(model2, split = list(region=list("PA v. SE"=1,"PA v. SW"=2,"PA v. W"
 
 contrasts(USregions$region) = mat4
 summary.aov(model2, split = list(region=list("SE v. SW"=1, "SE v. W"=2)))
+
+# Start my analysis of 9
+# work with more styles "Lager","Pilsner","Stout","Porter","Weissbier","Bock","Cider","Bitter","Hefeweizen","Oktoberfest","Quad","Tripel","Witbier"
+
+styles = c("Lager","Pilsner","Stout","Porter","Weissbier","Bock","Bitter","Hefeweizen","Oktoberfest","Tripel","Witbier")
+
+for(i in 1:length(styles)){
+  style = str_trim(styles[i], side = c("both"))
+  styleRegex = paste("\\b", style, "\\b", sep="")
+  IsStyleBoolName <- str_detect(BeerAndBreweryImproved$Name.y, regex(styleRegex, ignore_case = TRUE))
+  IsStyleBoolStyle <- str_detect(BeerAndBreweryImproved$Style, regex(styleRegex, ignore_case = TRUE))
+  BeerAndBreweryImproved[IsStyleBoolName|IsStyleBoolStyle,]$Classify <- style
+}
+
+#scatter plot
+BeerAndBreweryImproved %>% filter(Classify != "Other" & Classify != "Ale" & Classify != "IPA") %>% 
+ggplot(mapping = aes(x = ABV * 100, y = IBU))  + theme(legend.position = "none") +
+  geom_point(position = "dodge", mapping = aes(color = Classify)) + facet_wrap(vars(Classify), ncol = 3) +
+  ggtitle("IBU rating versus ABV percent by style") +
+  xlim(2.5, 10) + xlab("Percent ABV") + ylab("IBU Rating")
+
+
