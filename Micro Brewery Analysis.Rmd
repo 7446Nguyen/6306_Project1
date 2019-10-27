@@ -2,7 +2,10 @@
 title: "Micro Brewery Data Analysis"
 author: "Adam Ruthford and Jeff Nguyen"
 date: "10/19/2019"
-output: html_document
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -14,6 +17,7 @@ library(class)
 library(caret)
 library(kableExtra)
 library(ggpubr)
+library(replyr)
 ```
 
 # Import and clean data
@@ -24,9 +28,9 @@ Two data files Beers and Breweries are used in this analysis
 
 ```{r ImportData}
 
-# Get raw data
-Beers <- read.csv("C:\\Data\\GitRepos\\6306_Project1\\Beers.csv")
-Breweries <- read.csv("C:\\Data\\GitRepos\\6306_Project1\\Breweries.csv")
+# Get raw data (Will Vary on Source Location)
+Beers <- read.csv("C:\\Users\\Jeff Nguyen\\Desktop\\MSDS\\Data Science\\6306_Project1\\Beers.csv")
+Breweries <- read.csv("C:\\Users\\Jeff Nguyen\\Desktop\\MSDS\\Data Science\\6306_Project1\\Breweries.csv")
 ```
 
 ## Clean Data
@@ -279,7 +283,7 @@ print(as.matrix(cm))
 ## Question 9 Create our own answers
 
 ### Analysis by region examining ABV and IBU using ANOVA
-Six regions were created by grouping the states into them. An ANOVA(ANalysis Of VAriance) was performed by region. This test looks for statistically significant differences in IBU and ABV by region.
+Five regions were created by grouping the states into them. An ANOVA(ANalysis Of VAriance) was performed by region. This test looks for statistically significant differences in IBU and ABV by region.
 
 ### Create the regions
 
@@ -289,7 +293,7 @@ averageABV = BeerAndBreweryImproved %>%
   summarize(ABV = mean(ABV), IBU = mean(IBU))
 
 west = BeerAndBreweryImproved %>% 
-  filter(str_trim(State, side = c("both")) %in% c('WA','OR','CA','NV','ID','MT','WY','CO','NM','AZ','UT')) %>%
+  filter(str_trim(State, side = c("both")) %in% c('WA','OR','CA','NV','ID','MT','WY','CO','NM','AZ','UT','AL','HI')) %>%
   mutate(region = 'W')
 
 midwest = BeerAndBreweryImproved %>% 
@@ -308,10 +312,7 @@ northeast = BeerAndBreweryImproved %>%
   filter(str_trim(State, side = c("both")) %in% c('ME','NH','VT','MA','CT','RI','NJ','NY','PA')) %>%
   mutate(region = 'NE')
 
-pacific = BeerAndBreweryImproved %>% 
-  filter(str_trim(State, side = c("both")) %in% c('AL','HI')) %>%
-  mutate(region = 'PA')
-USregions = rbind(west,midwest,southwest,southeast,northeast,pacific)
+USregions = rbind(west,midwest,southwest,southeast,northeast)
 USregions$region = as.factor(USregions$region)
 ```
 
@@ -377,3 +378,11 @@ ggplot(mapping = aes(x = ABV * 100, y = IBU)) +
 
 The plots above are for styles that had a significant population of beers and had not been previously examined
 
+### Conclusion
+
+Removing duplicates and imputing NA values were important for us to provide a more accurate analysis.  Not doing so could potentially provide analysis and models that were not as accurate.
+When performing exploratory data analysis, looking at average ABV percent or IBU rating by state alone can be misleading due to small number of beers in some states.  It is important to apply a statistical procedure to see if there actually is a difference.\
+
+For classification purposes, the kNN model was used to separate Ales from IPAs with a high degree of accuracy, specificity, sensitivity, recall, and precision.  When combined with other data sources like market segmentation or sales, this model could potentially be used to help identify ale or IPA preferences in a region.\
+
+We choose to perform an ANOVA to see if there was a difference between geographic regions in the United States based on ABV and IBUs for Ales and IPAs.  The output from the ANOVAs and Tukey HSD post hoc test show that the western region of the United States prefers beer that has a higher IBU rating; and that Alcohol content as measured by ABV percent does not show a statistically significant difference across regions. Style data can also be used to group current IBU rating and ABV percent of available beers.  This information is useful in generating profiles based on IBU and ABV that may be useful in identifying and grouping different beer styles in the future.\
