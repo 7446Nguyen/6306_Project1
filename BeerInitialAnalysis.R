@@ -285,51 +285,6 @@ IBUModel = aov(IBU~region, data = USregions)
 summary(IBUModel)
 TukeyHSD(IBUModel)
 
-#MANOVA and Linear Combos - May not be the best option-----------------------------------------------------------
-model2 = manova(cbind(IBU, ABV) ~ region, data = USregions)
-
-model2 = manova(region ~ cbind(IBU, ABV) ~ region, data = USregions)
-summary(model2, test = "Wilks")
-
-levels(USregions$region)
-#"MW" "NE" "PA" "SE" "SW" "W" (6C2)
-c1 = c(1,-1,0,0,0,0)
-c2 = c(1,0,-1,0,0,0)
-c3 = c(1,0,0,-1,0,0)
-c4 = c(1,0,0,0,-1,0)
-c5 = c(1,0,0,0,0,-1)
-
-c6 = c(0,1,-1,0,0,0)
-c7 = c(0,1,0,-1,0,0)
-c8 = c(0,1,0,0,-1,0)
-c9 = c(0,1,0,0,0,-1)
-
-c10 = c(0,0,1,-1,0,0)
-c11 = c(0,0,1,0,-1,0)
-c12 = c(0,0,1,0,0,-1)
-
-c13 = c(0,0,0,1,-1,0)
-c14 = c(0,0,0,1,0,-1)
-c15 = c(0,0,0,0,1,-1)
-
-mat = cbind(c1,c2,c3,c4,c5)
-mat2 = cbind(c6,c7,c8,c9)
-mat3 = cbind(c10,c11,c12)
-mat4 = cbind(c13,c14)
-
-contrasts(USregions$region) = mat
-summary.aov(IBUModel, split = list(region=list("MW v. NE"=1, "MW v. PA" = 2, "MW v. SE" = 3, "MW v. SW" = 4,"MW v. W"=5)))
-
-contrasts(USregions$region) = mat2
-summary.aov(model2, split = list(region=list("NE v.PA"=1, "NE v. SE"=2,"NE v. SW"=4, "NE v. W"=4)))
-
-contrasts(USregions$region) = mat3
-summary.aov(model2, split = list(region=list("PA v. SE"=1,"PA v. SW"=2,"PA v. W"=3)))
-
-contrasts(USregions$region) = mat4
-summary.aov(model2, split = list(region=list("SE v. SW"=1, "SE v. W"=2)))
-
-<<<<<<< HEAD
 # Start my analysis of 9
 # work with more styles "Lager","Pilsner","Stout","Porter","Weissbier","Bock","Cider","Bitter","Hefeweizen","Oktoberfest","Quad","Tripel","Witbier"
 
