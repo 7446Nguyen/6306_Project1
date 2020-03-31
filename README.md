@@ -1,4 +1,4 @@
-#Classifying Beers with Their Nearest Neighbors - a KNN Exercise
+# Classifying Beers with Their Nearest Neighbors - a KNN Exercise
 
 **6306_Project1**
 This directory contains files associated with MS6306 Doing Data Science Project 1. The main intent of this project is to demonstrate: exploratory data analysis, data visualization, and KNN model building and hyperparameter tunning. 
